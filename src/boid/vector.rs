@@ -4,7 +4,7 @@ pub struct Vector {
 }
 
 impl Vector {
-  pub fn new(x: f32, y: f32) -> Self {
+  pub const fn new(x: f32, y: f32) -> Self {
     Vector{
       x,
       y
@@ -31,7 +31,19 @@ impl Vector {
     self.y
   }
 
-  pub fn reverse(&mut self) {
+  pub fn component_x(&self) -> Vector {
+    Vector::new(self.x, 0.0)
+  }
+
+  pub fn component_y(&self) -> Vector {
+    Vector::new(0.0, self.y) 
+  }
+
+  pub fn reverse(&self) -> Vector {
+    Vector::new(self.x * -1.0, self.y * -1.0)
+  }
+
+  pub fn reverse_self(&mut self) {
     self.x *= -1f32;
     self.y *= -1f32;
   }
@@ -41,6 +53,6 @@ impl Vector {
   }
 
   pub fn reverse_y(&mut self) {
-    self.y *= 1f32;
+    self.y *= -1f32;
   }
 }

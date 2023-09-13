@@ -22,7 +22,7 @@ pub fn main() {
     canvas.present();
     let mut event_pump = sdl_context.event_pump().unwrap();
 
-    let mut b1 = Boid::new(0, Color::RGB(0, 0, 150));
+    let mut b1 = Boid::new(0, Color::RGB(0, 0, 150), (30, 5));
 
     'running: loop {
         canvas.set_draw_color(Color::RGB(0, 255, 255));
