@@ -3,10 +3,7 @@ mod vector;
 use vector::Vector;
 use sdl2::{pixels::Color, render::Canvas, video::Window, rect::Point};
 
-const BLACK: Color = Color::RGB(0, 0, 0);
 const UNIT_SIZE: f32 = 5.0;
-const COLLISION_ENERGY_LOSS: Vector = Vector::new(-0.01, -0.01);
-const G: Vector = Vector::new(0.0, 0.0);
 const PI: f32 = std::f32::consts::PI;
 
 pub struct Boid {
@@ -15,7 +12,6 @@ pub struct Boid {
   pos: Point,
   v: Vector,
   a: Vector,
-  theta: f32,
   scale: f32
 }
 
@@ -27,8 +23,7 @@ impl Boid {
       color,
       pos: Point::new(pos.0, pos.1),
       v: Vector::new(0.5f32, 0.2f32),
-      a: G,
-      theta: 0.5 * PI,
+      a: Vector::new(0.0, 0.0),
       scale: 1f32
     }
   }
@@ -39,11 +34,11 @@ impl Boid {
     canvas.set_draw_color(self.color);
     let tip = self.pos;
     let back_left = self.pos.offset((-40f32 * self.scale) as i32, (-20f32 * self.scale) as i32);
-    let back_left = Boid::rotate_point(&back_left, &tip, self.theta);
+    let back_left = Boid::rotate_point(&back_left, &tip, self.v.direction());
     let middle = self.pos.offset((-30f32 * self.scale) as i32, (0f32 * self.scale) as i32);
-    let middle = Boid::rotate_point(&middle,&tip, self.theta);
+    let middle = Boid::rotate_point(&middle,&tip, self.v.direction());
     let back_right = self.pos.offset((-40f32 * self.scale) as i32, (20f32 * self.scale) as i32);
-    let back_right = Boid::rotate_point(&back_right, &tip, self.theta);
+    let back_right = Boid::rotate_point(&back_right, &tip, self.v.direction());
     let points = vec![tip, back_left, middle, back_right, tip];
 
     canvas.draw_lines(&*points).expect("Unable to Draw Boid {self._id}");
@@ -53,18 +48,13 @@ impl Boid {
     self.check_boundary_collision(canvas);
     self.update_physics();
     self.draw(canvas);
-    println!("pos: {:?} v: {:?} a: {:?} theta: {:?}", (self.pos.x, self.pos.y), (self.v.x(), self.v.y()), (self.a.x(), self.a.y()), self.theta);
+    dbg!(&self.pos, &self.v, &self.a);
   }
 }
 
 // Tick Functions
 impl Boid {
   fn update_physics(&mut self) {
-    if self.v.x() < 0.0 {
-      self.theta = (self.v.x() / self.v.y()).atan();
-    } else {
-      self.theta = (self.v.y() / self.v.x()).atan();
-    }
     self.v.offset_self(&self.a);
     self.pos = self.pos.offset((self.v.x() * UNIT_SIZE) as i32, (self.v.y() * UNIT_SIZE) as i32);
   }
@@ -94,7 +84,6 @@ impl Boid {
       } else {
         self.pos = Point::new(self.pos.x, 1);
       }
-      
     }
   } 
 }
@@ -105,7 +94,8 @@ impl Boid {
       self.scale = scale;
     } 
 
-    /// Rotate the given point around the center point given, by the angle theta
+    /// Rotate the given point around the center point given, by the angle theta,
+    /// Positive theta = rotation counterclockwise
     fn rotate_point(p: &Point, c: &Point, theta: f32) -> Point {
       let x = p.x as f32;
       let y = p.y as f32;
